@@ -1,0 +1,28 @@
+{
+  "name": "BelicheckYourLineUp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "webpack": "./node_modules/.bin/webpack -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.4",
+    "dotenv": "4.0.0",
+    "dotenv-webpack": "1.5.4",
+    "espn-fantasy-football-api": "^0.12.0",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.9",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0",
+    "read-env": "^1.2.0",
+    "superagent": "^3.8.3",
+    "webpack": "^4.28.3",
+    "webpack-cli": "^3.1.2"
+  }
+}
