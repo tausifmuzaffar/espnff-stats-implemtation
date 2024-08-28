@@ -480,6 +480,7 @@ function formatWeekData(data) {
     });
 
     const winStreaks = {};
+    const lossStreaks = {};
     const playoffWins = {};
     const groupedData = {};
 
@@ -608,7 +609,9 @@ function formatWeekData(data) {
     return everyWeek;
 }
 
-async function upsertScoreTable(client, formattedWeeks) {
+
+
+async function upsertWeeklyScoresTable(client, formattedWeeks) {
     let rawWeek = [];
     for (var year in formattedWeeks) {
         var weeks = formattedWeeks[year];
@@ -716,6 +719,69 @@ async function upsertScoreTable(client, formattedWeeks) {
     }
 }
 
+async function upsertYearlyOverviewTable(client, formattedYear) {
+    for (var i = 0; i < Object.keys(formattedYear).length; i++) {
+        var year = Object.keys(formattedYear)[i];
+        var teamData = formattedYear[year];
+        var insertQuery = `
+            INSERT INTO yearly_recap (
+                id,
+                year,
+                team,
+                manager_name,
+                total_wins,
+                total_losses,
+                longest_win_streak,
+                total_points_for,
+                total_points_against,
+                total_moves,
+                aquisitions,
+                trades
+            ) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+            ON CONFLICT (id) 
+            DO UPDATE SET
+                year = EXCLUDED.year,
+                team = EXCLUDED.team,
+                manager_name = EXCLUDED.manager_name,
+                total_wins = EXCLUDED.total_wins,
+                total_losses = EXCLUDED.total_losses,
+                longest_win_streak = EXCLUDED.longest_win_streak,
+                total_points_for = EXCLUDED.total_points_for,
+                total_points_against = EXCLUDED.total_points_against,
+                total_moves = EXCLUDED.total_moves,
+                aquisitions = EXCLUDED.aquisitions,
+                trades = EXCLUDED.trades;
+        `;
+        for (var j = 0; j < Object.keys(teamData).length; j++) {
+            var team = Object.keys(teamData)[j];
+            team = team === 13 ? 11 : parseInt(team);
+            var entry = teamData[team];
+            try {
+                await client.query(
+                    insertQuery,
+                    [
+                        parseInt(year) + ' | ' + ('0' + parseInt(team)).slice(-2), // 1 - id
+                        year, // 2 - year
+                        team, // 3 - team
+                        constants.managers[team], // 4 - manager_name
+                        entry.totalWins, // 5 - total_wins
+                        entry.totalLosses, // 6 - total_losses
+                        entry.longestWinStreak, // 7 - longest_win_streak
+                        parseFloat(entry.totalPointsFor).toFixed(2), // 8 - total_points_for
+                        parseFloat(entry.totalPointsAgainst).toFixed(2), // 9 - total_points_against
+                        entry.totalMoves, // 10 - total_moves
+                        entry.aquisitions, // 11 - aquisitions
+                        entry.trades, // 12 - trades
+                    ]
+                );
+            } catch (err) {
+                console.error('Error executing query', err.stack);
+            }
+        }
+    }
+}
+
 function totalsByTeam(data) {
     const totals = {};
     data.forEach(entry => {
@@ -760,6 +826,7 @@ module.exports = {
     parseV3Data,
     formatWeekData,
     totalsByTeam,
-    upsertScoreTable,
+    upsertWeeklyScoresTable,
+    upsertYearlyOverviewTable,
     getTranasctions
 }
